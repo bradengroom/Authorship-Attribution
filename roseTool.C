@@ -1,67 +1,36 @@
 #include "rose.h"
-#include "wholeAST.h"
-#include <iostream>
-#include <cstdlib>
-namespace SI = SageInterface;
-namespace SB = SageBuilder;
 
+class ToolVisitor : public AstSimpleProcessing {
 
-void toolRoutine(SgNode* node){
-	class ToolVisitor : public AstSimpleProcessing {
-	
-		void atTraversalStart() {
-			//Any preliminary work that needs to be done can go here.
-			printf("Node start\n");
+	void atTraversalStart() {
+		//Any preliminary work that needs to be done can go here.
+		printf("Traversal starts here\n");
+	}
+
+	void atTraversalEnd(){
+		//Any work that needs to be done after the traversal can go here.
+		printf("Traversal ends here\n");
+	}
+
+	void visit (SgNode* node) {
+		//This is the visitor function. The ToolVisitor obeys the visitor design pattern.
+		if ( isSgForStatement(node) != NULL) {
+			printf("Found a for loop...\n");
 		}
-		
-		void atTraversalEnd(){
-			//Any work that needs to be done after the traversal can go here.
-			printf("Node end\n");
-		}
-		
-		void visit (SgNode* node) {
-			//This is the visitor function. The ToolVisitor obeys the visitor design pattern.
+		printf("%s\n", node->sage_class_name());
+	}
+};
 
-			SgLocatedNode* locatedNode = isSgLocatedNode(node);
-
-			if (locatedNode != NULL)
-			{
-				AttachedPreprocessingInfoType* comments = locatedNode->getAttachedPreprocessingInfo();
-
-				if (comments != NULL)
-				{
-					AttachedPreprocessingInfoType::iterator i;
-					for (i = comments->begin(); i != comments->end(); i++)
-					{
-						if (strcmp(PreprocessingInfo::directiveTypeName((*i)->getTypeOfDirective()).c_str(), "CpreprocessorIncludeDeclaration") != 0)
-						{
-							printf("COMMENT:\n%s\n\n", (*i)->getString().c_str());
-							(*i)->setString("//Changed comment");
-						}
-					}
-				}
-			}
-		}
-	
-	};
-
-	ROSE_ASSERT(node != NULL);
-	ToolVisitor visitor;
-	visitor.traverse(node,preorder);
-	
-}
-
-
-int main(int argc, char* argv[]) {
+int main (int argc, char* argv[]) {
 
 	SgProject* project = frontend(argc, argv);
+
 	ROSE_ASSERT(project != NULL);
 
-	toolRoutine(project);
-	project->unparse();
+	ToolVisitor traversal;
 
-	return 0;
+	traversal.traverseInputFiles(project, preorder);
 
-
+	return backend(project);
 }
 
