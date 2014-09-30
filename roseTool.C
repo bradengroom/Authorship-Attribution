@@ -1,25 +1,44 @@
+#include <iostream>
+#include <string>
+
 #include "rose.h"
 
-class ToolVisitor : public AstSimpleProcessing {
-
-	void atTraversalStart() {
-		//Any preliminary work that needs to be done can go here.
-		printf("Traversal starts here\n");
-	}
-
-	void atTraversalEnd(){
-		//Any work that needs to be done after the traversal can go here.
-		printf("Traversal ends here\n");
-	}
-
-	void visit (SgNode* node) {
-		//This is the visitor function. The ToolVisitor obeys the visitor design pattern.
-		if ( isSgForStatement(node) != NULL) {
-			printf("Found a for loop...\n");
+class AccumulatorAttribute
+{
+	public:
+		int forLoopCounter;
+		AccumulatorAttribute ()
+		{
+			forLoopCounter = 0;
 		}
-		printf("%s\n", node->sage_class_name());
-	}
+
+		AccumulatorAttribute (const AccumulatorAttribute & X) {}
+
+		AccumulatorAttribute & operator = (const AccumulatorAttribute & X)
+		{
+			return * this;
+		}
+
 };
+
+class visitorTraversal : public AstSimpleProcessing
+{
+	public:
+		static AccumulatorAttribute accumulatorAttribute;
+		virtual void visit(SgNode* n);
+};
+
+AccumulatorAttribute visitorTraversal::accumulatorAttribute;
+
+void visitorTraversal::visit(SgNode* n)
+{
+
+	if(isSgForStatement(n) != NULL)
+	{
+		printf("Found a for loop...\n");
+		accumulatorAttribute.forLoopCounter++;
+	}
+}
 
 int main (int argc, char* argv[]) {
 
@@ -27,9 +46,11 @@ int main (int argc, char* argv[]) {
 
 	ROSE_ASSERT(project != NULL);
 
-	ToolVisitor traversal;
+	visitorTraversal exampleTraversal;
 
-	traversal.traverseInputFiles(project, preorder);
+	exampleTraversal.traverseInputFiles(project, preorder);
+
+	printf("Number of for loops in input application = %d\n", exampleTraversal.accumulatorAttribute.forLoopCounter);
 
 	return backend(project);
 }
