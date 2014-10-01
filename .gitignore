@@ -1,2 +1,8 @@
 test-code/*
 rose_*
+.libs/
+a.out
+exectool
+main.o
+randNums.o
+roseTool.lo
